@@ -1,0 +1,54 @@
+name: Build and release nuget package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_nuget_package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: 'amd64'
+            platform: 'x64'
+          - arch: 'arm64'
+            platform: 'ARM64'
+    name: "Build nuget package ${{ matrix.arch }}"
+    uses: ./.github/workflows/bcny-build-nuget-package.yml
+    with:
+      arch: ${{ matrix.arch }}
+      platform: ${{ matrix.platform }}
+
+  publish_nuget_package:
+    name: "Publish nuget package"
+    runs-on: windows-latest
+    needs: build_nuget_package
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: 'amd64'
+            platform: 'x64'
+          - arch: 'arm64'
+            platform: 'ARM64'
+    env:
+      NUGET_SOURCE_NAME: TheBrowserCompany
+      NUGET_SOURCE_URL: https://nuget.pkg.github.com/thebrowsercompany/index.json
+      NUGET_SOURCE_USERNAME: thebrowsercompany-bot2
+      NUGET_SOURCE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      NUGET_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows-${{ matrix.arch }}.nupkg
+      - name: "Upload nuget package ${{ matrix.arch }}"
+        run: |
+          if ((nuget sources List | Select-String "${env:NUGET_SOURCE_NAME}").Count -gt 0) {
+            nuget sources Remove -Name "${env:NUGET_SOURCE_NAME}"
+          }
+          nuget sources Add -Name ${env:NUGET_SOURCE_NAME} -Source ${env:NUGET_SOURCE_URL} -Username ${env:NUGET_SOURCE_USERNAME} -Password ${env:NUGET_SOURCE_PASSWORD} -StorePasswordInClearText
+          nuget setApiKey ${env:NUGET_API_KEY} -Source ${env:NUGET_SOURCE_URL}
+          $pkgs = Get-ChildItem -Path org.libsodium.libsodium.windows.${{ matrix.arch }}.*.nupkg
+          nuget push $pkgs[0].Name -Source ${env:NUGET_SOURCE_URL} -SkipDuplicate
+        shell: pwsh

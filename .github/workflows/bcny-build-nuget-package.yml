@@ -1,0 +1,137 @@
+name: "bcny-build-nuget-package"
+on:
+  workflow_call:
+    inputs:
+      arch:
+        description: "Name of the architecture amd64 or arm64"
+        required: true
+        type: string
+      platform:
+        description: "MSVC understandable platform name x64 or ARM64"
+        required: true
+        type: string
+
+jobs:
+  build_and_package:
+    name: "Build and package libsodium"
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: compnerd/gha-setup-vsdevenv@main
+        with:
+          host_arch: amd64
+          components: 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64;Microsoft.VisualStudio.Component.VC.Tools.ARM64'
+          arch: ${{ inputs.arch }}
+
+      - uses: actions/setup-python@v4
+        id: python
+        with:
+          python-version: 3.9
+          architecture: 'x64'
+
+      - name: Build StaticRelease
+        run:
+          msbuild .\builds\msvc\vs2022\libsodium.sln /p:Configuration=StaticRelease /p:Platform=${{ inputs.platform }}
+
+      - name: Build DynRelease
+        run:
+          msbuild .\builds\msvc\vs2022\libsodium.sln /p:Configuration=DynRelease /p:Platform=${{ inputs.platform }}
+
+      - name: Build LtcgRelease
+        run:
+          msbuild .\builds\msvc\vs2022\libsodium.sln /p:Configuration=LtcgRelease /p:Platform=${{ inputs.platform }}
+
+      - name: Package libsodium
+        run: |
+          @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+            <metadata>
+              <id>org.libsodium.libsodium.windows.${{ inputs.arch }}</id>
+              <version>0.0.0</version>
+              <title>libsodium </title>
+              <description>libsodium</description>
+              <authors>org.libsodium</authors>
+              <projectUrl>https://libsodium.org</projectUrl>
+              <repository type="git" url="https://github.com/jedisct1/libsodium" branch="master" />
+            </metadata>
+            <files>
+              <file src="${{ github.workspace }}\bin\${{inputs.platform}}\Release\v143\static\libsodium.lib" target="lib" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium.h" target="include" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\core.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_aead_aegis128l.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_aead_aegis256.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_aead_aes256gcm.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_aead_chacha20poly1305.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_aead_xchacha20poly1305.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_auth.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_auth_hmacsha256.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_auth_hmacsha512.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_auth_hmacsha512256.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_box.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_box_curve25519xchacha20poly1305.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_box_curve25519xsalsa20poly1305.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_core_ed25519.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_core_hchacha20.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_core_hsalsa20.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_core_ristretto255.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_core_salsa20.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_core_salsa2012.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_core_salsa208.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_generichash.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_generichash_blake2b.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_hash.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_hash_sha256.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_hash_sha512.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_kdf.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_kdf_blake2b.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_kdf_hkdf_sha256.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_kdf_hkdf_sha512.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_kx.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_onetimeauth.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_onetimeauth_poly1305.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_pwhash.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_pwhash_argon2i.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_pwhash_argon2id.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_pwhash_scryptsalsa208sha256.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_scalarmult.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_scalarmult_curve25519.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_scalarmult_ed25519.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_scalarmult_ristretto255.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_secretbox.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_secretbox_xchacha20poly1305.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_secretbox_xsalsa20poly1305.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_secretstream_xchacha20poly1305.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_shorthash.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_shorthash_siphash24.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_sign.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_sign_ed25519.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_stream.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_stream_chacha20.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_stream_salsa20.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_stream_salsa2012.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_stream_salsa208.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_stream_xchacha20.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_stream_xsalsa20.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_verify_16.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_verify_32.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_verify_64.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\export.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\randombytes.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\randombytes_internal_random.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\randombytes_sysrandom.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\runtime.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\utils.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\version.h" target="include/sodium" />
+              <file src="${{ github.workspace }}\src\libsodium\include\sodium\version.h.in" target="include/sodium" />
+            </files>
+          </package>
+          "@ | Out-File -Encoding UTF8 libsodium.nuspec
+          nuget pack -Suffix (git log -1 --format=%h) libsodium.nuspec
+        shell: pwsh
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: windows-${{ inputs.arch }}.nupkg
+          path: org.libsodium.libsodium.windows.${{ inputs.arch }}.*.nupkg

@@ -1,0 +1,23 @@
+name: Validate nuget package
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build_nuget_package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: 'amd64'
+            platform: 'x64'
+          - arch: 'arm64'
+            platform: 'ARM64'
+    name: "Build nuget package ${{ matrix.arch }}"
+    uses: ./.github/workflows/bcny-build-nuget-package.yml
+    with:
+      arch: ${{ matrix.arch }}
+      platform: ${{ matrix.platform }}
