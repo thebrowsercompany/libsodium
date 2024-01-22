@@ -57,12 +57,7 @@ jobs:
               <repository type="git" url="https://github.com/jedisct1/libsodium" branch="master" />
             </metadata>
             <files>
-              <file src="${{ github.workspace }}\bin\${{inputs.platform}}\Release\v143\static\libsodium.lib" target="lib/static" />
-              <file src="${{ github.workspace }}\bin\${{inputs.platform}}\Release\v143\dynamic\libsodium.lib" target="lib/dynamic" />
-              <file src="${{ github.workspace }}\bin\${{inputs.platform}}\Release\v143\dynamic\libsodium.pdb" target="lib/dynamic" />
-              <file src="${{ github.workspace }}\bin\${{inputs.platform}}\Release\v143\dynamic\libsodium.dll" target="lib/dynamic" />
-              <file src="${{ github.workspace }}\bin\${{inputs.platform}}\Release\v143\dynamic\libsodium.exp" target="lib/dynamic" />
-              <file src="${{ github.workspace }}\bin\${{inputs.platform}}\Release\v143\ltcg\libsodium.lib" target="lib/ltcg" />
+              <file src="${{ github.workspace }}\bin\${{inputs.platform}}\Release\v143\static\libsodium.lib" target="lib" />
               <file src="${{ github.workspace }}\src\libsodium\include\sodium.h" target="include" />
               <file src="${{ github.workspace }}\src\libsodium\include\sodium\core.h" target="include/sodium" />
               <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_aead_aegis128l.h" target="include/sodium" />
