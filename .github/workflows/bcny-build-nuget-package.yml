@@ -59,6 +59,7 @@ jobs:
             <files>
               <file src="${{ github.workspace }}\bin\${{inputs.platform}}\Release\v143\static\libsodium.lib" target="lib" />
               <file src="${{ github.workspace }}\src\libsodium\include\sodium.h" target="include" />
+              <file src="${{ github.workspace }}\src\libsodium\include\module.modulemap" target="include" />
               <file src="${{ github.workspace }}\src\libsodium\include\sodium\core.h" target="include/sodium" />
               <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_aead_aegis128l.h" target="include/sodium" />
               <file src="${{ github.workspace }}\src\libsodium\include\sodium\crypto_aead_aegis256.h" target="include/sodium" />
